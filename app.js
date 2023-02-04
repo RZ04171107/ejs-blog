@@ -3,6 +3,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
+const _ = require('lodash');
+
+const posts = [];
 
 const homeStartingContent =
   'Lacus vel facilisis volutpat est velit egestas dui id ornare. Semper auctor neque vitae tempus quam. Sit amet cursus sit amet dictum sit amet justo. Viverra tellus in hac habitasse. Imperdiet proin fermentum leo vel orci porta. Donec ultrices tincidunt arcu non sodales neque sodales ut. Mattis molestie a iaculis at erat pellentesque adipiscing. Magnis dis parturient montes nascetur ridiculus mus mauris vitae ultricies. Adipiscing elit ut aliquam purus sit amet luctus venenatis lectus. Ultrices vitae auctor eu augue ut lectus arcu bibendum at. Odio euismod lacinia at quis risus sed vulputate odio ut. Cursus mattis molestie a iaculis at erat pellentesque adipiscing.';
@@ -15,19 +18,60 @@ const app = express();
 
 app.set('view engine', 'ejs');
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
-  console.log('get method to /');
-  res.render('home', { homeStartingContent: homeStartingContent });
+  //console.log(posts);
+  res.render('home', {
+    homeStartingContent: homeStartingContent,
+    posts: posts,
+  });
+});
+
+app.get('/posts/:postName', (req, res) => {
+  const name = _.lowerCase(req.params.postName);
+
+  console.log(name);
+  let matchFound = false;
+  //if the name is one of the post title, console.log "match found!"
+  posts.forEach((elem) => {
+    const title_l = _.lowerCase(elem.title);
+    if (title_l === name) {
+      matchFound = true;
+      res.render('post', {
+        title: elem.title,
+        content: elem.content,
+      });
+    }
+  });
+
+  if (!matchFound) {
+    console.log('Ooops!');
+  }
 });
 
 app.get('/about', (req, res) => {
   res.render('about', { aboutContent: aboutContent });
 });
+
 app.get('/contact', (req, res) => {
   res.render('contact', { contactContent: contactContent });
+});
+
+app.get('/compose', (req, res) => {
+  res.render('compose');
+});
+
+app.post('/compose', (req, res) => {
+  const post = { title: req.body.postTitle, content: req.body.postBody };
+
+  posts.push(post);
+  res.redirect('/');
 });
 
 app.listen(3000, function () {
